@@ -5,9 +5,6 @@ from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# This is our fake database for now - just a Python dictionary
-fake_users_db = {}
-
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
