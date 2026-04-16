@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-jose
+passlib
+python-multipart
+bcrypt==4.0.1
+motor
+pymongo
+python-dotenv
+redis
+langchain
+langchain-community
+langchain-text-splitters
+chromadb
+pypdf
+sentence-transformers
+huggingface-hub

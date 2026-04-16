@@ -22,6 +22,7 @@ def ingest_document(file_path: str, doc_id: str) -> int:
     chunks = splitter.split_documents(docs)
 
     # Store in ChromaDB
+    
     embeddings = get_embeddings()
     vectorstore = Chroma(
         collection_name=doc_id,
