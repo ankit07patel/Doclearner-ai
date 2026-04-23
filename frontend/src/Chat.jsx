@@ -1,10 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { chat } from './api'
+import axios from 'axios'
 
 export default function Chat({ doc, onBack }) {
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
+  const [sessionId, setSessionId] = useState(null)
+  const bottomRef = useRef(null)
+
+  useEffect(() => {
+    loadHistory()
+  }, [])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const loadHistory = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.get(
+        `http://127.0.0.1:8000/chat/history/${doc.doc_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      const history = res.data.history.map(h => ([
+        { role: 'user', content: h.question },
+        { role: 'ai', content: h.answer }
+      ])).flat()
+      setMessages(history)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const handleChat = async () => {
     if (!question.trim()) return
@@ -14,8 +42,9 @@ export default function Chat({ doc, onBack }) {
     setLoading(true)
 
     try {
-      const res = await chat(doc.doc_id, userMessage)
-      setMessages(prev => [...prev, { role: 'ai', content: res.data.context }])
+      const res = await chat(doc.doc_id, userMessage, sessionId)
+      setSessionId(res.data.session_id)
+      setMessages(prev => [...prev, { role: 'ai', content: res.data.answer }])
     } catch (err) {
       setMessages(prev => [...prev, { role: 'ai', content: 'Something went wrong. Try again.' }])
     }
@@ -76,6 +105,7 @@ export default function Chat({ doc, onBack }) {
             </div>
           </div>
         )}
+        <div ref={bottomRef} />
       </div>
 
       {/* Input */}

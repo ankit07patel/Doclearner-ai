@@ -31,5 +31,5 @@ export const uploadPDF = (file) => {
 export const getDocuments = () =>
   API.get('/documents')
 
-export const chat = (doc_id, question) =>
-  API.post('/chat', { doc_id, question })
+export const chat = (doc_id, question, session_id = null) =>
+  API.post('/chat', { doc_id, question, session_id })
