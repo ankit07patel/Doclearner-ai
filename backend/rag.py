@@ -14,7 +14,7 @@ def get_embeddings():
 def get_llm():
     return ChatGroq(
         api_key=GROQ_API_KEY,
-        model_name="llama3-8b-8192",
+        model_name="llama-3.3-70b-versatile",
         temperature=0.1
     )
 

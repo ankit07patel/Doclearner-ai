@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from auth import hash_password, verify_password, create_access_token, decode_token
 from database import users_collection, documents_collection, chats_collection
 from rag import ingest_document, query_document
-from redis_client import cache_message, get_cached_messages
+from redis_client import cache_message, get_cached_messages, check_rate_limit
 
 app = FastAPI(title="Doclearner AI")
 
@@ -30,10 +30,14 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+from typing import Optional
+
+from typing import Optional
+
 class ChatRequest(BaseModel):
     doc_id: str
     question: str
-    session_id: str = None
+    session_id: Optional[str] = None
 
 
 # --- Auth Routes ---
@@ -143,6 +147,9 @@ async def chat(
     email = decode_token(credentials.credentials)
     if not email:
         raise HTTPException(status_code=401, detail="Invalid token")
+    # Rate limiting
+    if not await check_rate_limit(email):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again in a minute.")
 
     doc = await documents_collection.find_one({
         "doc_id": req.doc_id,

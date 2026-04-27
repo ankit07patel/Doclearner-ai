@@ -16,3 +16,9 @@ async def get_cached_messages(session_id: str):
         role, content = msg.decode().split(":", 1)
         result.append({"role": role, "content": content})
     return result
+async def check_rate_limit(user_id: str) -> bool:
+    key = f"ratelimit:{user_id}"
+    count = await client.incr(key)
+    if count == 1:
+        await client.expire(key, 60)  # 60 second window
+    return count <= 10  # 10 requests per minute
