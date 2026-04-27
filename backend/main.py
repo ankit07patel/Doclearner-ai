@@ -151,15 +151,18 @@ async def chat(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # Get relevant context from ChromaDB
-    context = query_document(req.doc_id, req.question)
-
     # Generate session_id if not provided
     session_id = req.session_id or str(uuid.uuid4())
 
+    # Get cached chat history from Redis
+    history = await get_cached_messages(session_id)
+
+    # Get AI answer from Groq with context
+    answer = query_document(req.doc_id, req.question, history)
+
     # Cache messages in Redis
     await cache_message(session_id, "user", req.question)
-    await cache_message(session_id, "ai", context)
+    await cache_message(session_id, "ai", answer)
 
     # Save to MongoDB
     await chats_collection.insert_one({
@@ -167,16 +170,17 @@ async def chat(
         "doc_id": req.doc_id,
         "email": email,
         "question": req.question,
-        "answer": context,
+        "answer": answer,
         "created_at": str(__import__("datetime").datetime.utcnow())
     })
 
     return {
         "session_id": session_id,
         "question": req.question,
-        "answer": context,
+        "answer": answer,
         "message": "Success"
     }
+
 
 
 @app.get("/chat/history/{doc_id}")
